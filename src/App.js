@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import Todo from "./Todo";
 import "./App.css";
 
@@ -12,7 +12,10 @@ export const ACTIONS = {
 const reducer = (todos, action) => {
   switch (action.type) {
     case ACTIONS.ADD_TODO:
-      return [...todos, newTodo(action.payload.name)];
+      if (action.payload.name !== "") {
+        return [...todos, newTodo(action.payload.name)];
+      }
+    // eslint-disable-next-line no-fallthrough
     case ACTIONS.TOGGLE_TODO:
       return todos.map((todo) => {
         if (todo.id === action.payload.id) {
@@ -37,8 +40,17 @@ function newTodo(name) {
   return { id: Date.now(), name: name, complete: false };
 }
 
+//get data from local storage
+const getLocalItems = () => {
+  let list = localStorage.getItem("todoreactlist");
+  if (list) {
+    return JSON.parse(localStorage.getItem("todoreactlist"));
+  } else {
+    return [];
+  }
+};
 const App = () => {
-  const [todos, dispatch] = useReducer(reducer, []);
+  const [todos, dispatch] = useReducer(reducer, getLocalItems());
   const [name, setName] = useState("");
 
   const handleSubmit = (e) => {
@@ -46,6 +58,10 @@ const App = () => {
     dispatch({ type: ACTIONS.ADD_TODO, payload: { name: name } });
     setName("");
   };
+
+  useEffect(() => {
+    localStorage.setItem("todoreactlist", JSON.stringify(todos));
+  }, [todos]);
 
   return (
     <div className="container">
